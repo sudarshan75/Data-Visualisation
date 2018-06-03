@@ -1,0 +1,68 @@
+---
+title: "ODI_batting"
+runtime: shiny
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: scroll
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(dplyr)
+library(ggplot2)
+library(DT)
+odi<-read.csv("E:/New folder/odi-batting.csv")
+unique(odi$Country)
+```
+
+
+Select Bar{.sidebar}
+--------------------------------------------------
+```{r}
+selectInput(inputId = "Nation",label = "Select the country",choices = unique(odi$Country))
+
+selectInput(inputId = "Opponent",label = "Select the opponent",choices = c("All",as.character(unique(odi$Versus))),selected = "All")
+```
+
+Row
+-----------------------
+
+### Total Number of Matches
+
+```{r}
+renderValueBox({
+  data={
+    if(input$Opponent=="All"){
+      data1=filter(odi,Country==input$Nation)
+    } else {
+      data1= filter(odi,Country==input$Nation & Versus == input$Opponent)
+    }
+    data1
+  }
+    value=data%>%summarise(total=n_distinct(MatchDate))
+    valueBox(value,icon="fa-flag",color = "darkblue")
+})
+```
+
+
+### Highest Score
+```{r}
+renderValueBox({
+  if(input$Nation==input$Opponent){
+    val=0
+  } else {
+  data={
+    if(input$Opponent=="All"){
+      data1=filter(odi,Country==input$Nation)
+    } else {
+      data1=filter(odi,Country==input$Nation & Versus==input$Opponent)
+    }
+    data1
+  }
+  val=data%>%group_by(MatchDate)%>%summarise(total=sum(Runs))%>%arrange(desc(total))%>%select(total)}
+  valueBox(val,icon="fa-flag",color = "darkblue")
+})
+```
+
+
